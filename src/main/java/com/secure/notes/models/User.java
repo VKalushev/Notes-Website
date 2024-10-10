@@ -36,7 +36,7 @@ public class User {
     @NotBlank
     @Size(max = 50)
     @Column(name = "username")
-    private String username;
+    private String userName;
 
     @NotBlank
     @Size(max = 50)
@@ -55,7 +55,7 @@ public class User {
     private boolean enabled = true;
 
     private LocalDate credentialsExpiryDate;
-    private LocalDate accountExpiredDate;
+    private LocalDate accountExpiryDate;
 
     private String twoFactorSecret;
     private boolean isTwoFactorEnabled = false;
@@ -74,14 +74,14 @@ public class User {
     @UpdateTimestamp
     private LocalDateTime updatedDate;
 
-    public User(String username, String email, String password) {
-        this.username = username;
+    public User(String userName, String email, String password) {
+        this.userName = userName;
         this.email = email;
         this.password = password;
     }
 
-    public User(String username, String email) {
-        this.username = username;
+    public User(String userName, String email) {
+        this.userName = userName;
         this.email = email;
     }
 
