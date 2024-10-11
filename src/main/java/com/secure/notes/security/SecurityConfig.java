@@ -5,14 +5,19 @@ import com.secure.notes.models.Role;
 import com.secure.notes.models.User;
 import com.secure.notes.repositories.RoleRepository;
 import com.secure.notes.repositories.UserRepository;
+import com.secure.notes.security.jwt.AuthEntryPointJwt;
+import com.secure.notes.security.jwt.AuthTokenFilter;
+import com.secure.notes.security.jwt.JwtUtils;
+import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -23,6 +28,7 @@ import java.time.LocalDate;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
+@RequiredArgsConstructor
 @Configuration
 @EnableWebSecurity
 //@EnableMethodSecurity(prePostEnabled = true,
@@ -30,19 +36,41 @@ import static org.springframework.security.config.Customizer.withDefaults;
 //    jsr250Enabled = true)
 public class SecurityConfig {
 
+    private final JwtUtils jwtUtils;
+
+    private final UserDetailsService userDetailsService;
+
+    private final AuthEntryPointJwt unauthorizedHandler;
+
     @Bean
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf ->
-                csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()));
+                csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .ignoringRequestMatchers("/api/auth/**"));
 //        http.csrf(AbstractHttpConfigurer::disable);
         http.authorizeHttpRequests((requests) -> requests
-                .requestMatchers("/api/csrf-token").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/csrf-token").permitAll()
+                .requestMatchers("/api/auth/**").permitAll()
                 .anyRequest().authenticated());
-//        http.formLogin(withDefaults());
+
+        http.exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler));
         http.addFilterBefore(new CustomLoggingFilter(), UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(authTokenFilter(), CustomLoggingFilter.class);
+
+        http.formLogin(withDefaults());
         http.httpBasic(withDefaults());
         return http.build();
+    }
+
+    @Bean
+    public AuthTokenFilter authTokenFilter() {
+        return new AuthTokenFilter(jwtUtils, userDetailsService);
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
     }
 
     @Bean
@@ -88,7 +116,6 @@ public class SecurityConfig {
             }
         };
     }
-
 
 
 }
