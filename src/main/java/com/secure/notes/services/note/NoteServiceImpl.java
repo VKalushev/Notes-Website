@@ -1,5 +1,6 @@
 package com.secure.notes.services.note;
 
+import com.secure.notes.exceptions.ResourceNotFoundException;
 import com.secure.notes.models.Note;
 import com.secure.notes.repositories.NoteRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,8 +24,8 @@ public class NoteServiceImpl implements NoteService {
     }
 
     @Override
-    public Note updateNoteForUser(Long noteId, String content, String username) {
-        Note note = noteRepository.findById(noteId).orElseThrow(() -> new RuntimeException("Note not found"));
+    public Note updateNoteForUser(Long noteId, String content) {
+        Note note = noteRepository.findById(noteId).orElseThrow(() -> new ResourceNotFoundException("Note not found"));
         note.setContent(content);
         return noteRepository.save(note);
     }

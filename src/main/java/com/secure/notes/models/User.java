@@ -2,14 +2,12 @@ package com.secure.notes.models;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.secure.notes.repositories.RoleRepository;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -83,6 +81,21 @@ public class User {
     public User(String userName, String email) {
         this.userName = userName;
         this.email = email;
+    }
+
+    public void setupDefaults(RoleRepository roleRepository){
+        Role role = roleRepository.findByRoleName(AppRole.ROLE_USER)
+                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+
+        this.setRole(role);
+        this.setAccountNonLocked(true);
+        this.setAccountNonExpired(true);
+        this.setCredentialsNonExpired(true);
+        this.setEnabled(true);
+        this.setCredentialsExpiryDate(LocalDate.now().plusYears(1));
+        this.setAccountExpiryDate(LocalDate.now().plusYears(1));
+        this.setTwoFactorEnabled(false);
+        this.setSignUpMethod("email");
     }
 
     @Override

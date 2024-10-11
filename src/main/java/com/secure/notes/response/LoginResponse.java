@@ -1,4 +1,4 @@
-package com.secure.notes.security.response;
+package com.secure.notes.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -1,4 +1,4 @@
-package com.secure.notes.security.request;
+package com.secure.notes.request;
 
 import lombok.Data;
 
